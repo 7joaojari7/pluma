@@ -11,6 +11,7 @@ uses
 exports 
     locdriver_setup, 
     entity_setup,
+    surface_setup,
     actor_setup,
     locdriver_start_event,
     locdriver_destroy;
