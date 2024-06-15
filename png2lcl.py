@@ -22,4 +22,7 @@ with open(output_file, "w") as file:
 
             # Check if the red component is above the threshold
             if r == 237 and g == 28 and b == 36:
-                file.write('$%d$%d:1\n' % (x, y))
+                file.write('1')
+            else:
+                file.write('0')
+        file.write('\n')
