@@ -1,19 +1,18 @@
 library Luno;
 
 uses 
-    lunoloc, 
-    lunomath, 
-    lunoparse,
-    sysutils, 
-    math, 
-    DateUtils;
+    luno_loc, 
+    luno_math, 
+    luno_parse;
 
 exports 
     locdriver_setup, 
     entity_setup,
     surface_setup,
     actor_setup,
-    locdriver_start_event,
+    Q_atan,
+    Q_sqrrt,
+    locdriver_process,
     locdriver_destroy;
 
 begin 
