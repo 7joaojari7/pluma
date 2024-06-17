@@ -16,7 +16,7 @@ unit luno_loc;
 interface
 
 uses 
-    luno_math, sysutils;
+    luno_math, sysutils, math;
 
 const 
     LOCDRIVER_DEBUG = true;
@@ -82,20 +82,24 @@ type
         vertex_list: vec2_array;    // lista de vertices
     end; 
 
+    surface_ptr = ^surface;
+
     // O locdriver (localização / driver) é um objeto que guarda todas as informações necessarias para o sistema
     // de caminho vetorial proposto para o desafio.
     locdriver = record
+        current_event: locdriver_event;
         surf: surface;      // mapa
         robot: actor;      // ator principal
     end;
+
     locdriver_ptr = ^locdriver;
 
     function surface_setup(vertex_list: vec2_array; size_cm: vec2; size_e: vec2): surface;                      export;
     function entity_setup(pos: vec2; model: vec2_array): entity;                                                export;
     function actor_setup(body: entity): actor;                                                                  export;
-    function locdriver_start_event(ld_s: locdriver_ptr): locdriver_event;                                       export;
-    function locdriver_setup(surf: surface; robot: actor; flags__: LD_SETUP_FLAGS): locdriver_ptr;             export;
-    procedure locdriver_destroy(ld: locdriver_ptr);                                                             export;
+    function locdriver_process(ld_s: locdriver_ptr): locdriver_event;                                       export;
+    function locdriver_setup(surf: surface; robot: actor; flags__: LD_SETUP_FLAGS): locdriver_ptr;              export;
+    procedure locdriver_destroy(ld: locdriver_ptr);                                                             export;      
 
 implementation
 
@@ -131,7 +135,7 @@ var
 begin
     // aloque um pouco de memoria para o nosso ponteiro de locdriver
     new(ld_s); 
-
+ 
     // receba os parametros
     ld_s^.robot     := robot; 
     ld_s^.surf      := surf;
@@ -144,6 +148,13 @@ begin
         begin
             // entao o indice é o mesmo que o loop
             ld_s^.surf.vindex := i;
+
+            if(flags__ = LD_FORMAT_VERTEX)then
+            begin
+                //ld_s^.surf.vertex_list := vec2_array_format(ld_s^.surf.vertex_list, ld_s^.robot.body.pos);
+                //ld_s^.robot.body.pos.x := ld_s^.surf.vertex_list[i].x;
+                //ld_s^.robot.body.pos.y := ld_s^.surf.vertex_list[i].y;
+            end;
 
             // se não houver elementos anteriores 
             if ld_s^.surf.vindex = 0 then
@@ -171,23 +182,23 @@ begin
                 writeln('ld_s^.robot.body.last_pos : '     + FloatToStr(ld_s^.robot.body.last_pos^.x) + ' ' + FloatToStr(ld_s^.robot.body.last_pos^.y));
                 writeln('ld_s^.robot.body.next_pos  : '    + FloatToStr(ld_s^.robot.body.next_pos^.x) + ' ' + FloatToStr(ld_s^.robot.body.next_pos^.y));
             end;
-        
+ 
         end;
     end;
 
     locdriver_setup := ld_s;
 end;
 
-function locdriver_start_event(ld_s: locdriver_ptr): locdriver_event; export;
+function locdriver_process(ld_s: locdriver_ptr): locdriver_event; export;
 var
     ev_s: locdriver_event;
 begin
-    ev_s.sides.x := (ld_s^.robot.body.next_pos^.x * ld_s^.robot.body.next_pos^.x) - (ld_s^.robot.body.pos.x * ld_s^.robot.body.pos.x);
-    ev_s.sides.y := (ld_s^.robot.body.next_pos^.y * ld_s^.robot.body.next_pos^.y) - (ld_s^.robot.body.pos.y * ld_s^.robot.body.pos.y);
-    ev_s.distance := Sqrt(ev_s.sides.x + ev_s.sides.y) / ld_s^.surf.e_length;
+    ev_s.sides.x := (ld_s^.robot.body.next_pos^.x - ld_s^.robot.body.pos.x) * (ld_s^.robot.body.next_pos^.x - ld_s^.robot.body.pos.x);
+    ev_s.sides.y := (ld_s^.robot.body.next_pos^.y - ld_s^.robot.body.pos.y) * (ld_s^.robot.body.next_pos^.y - ld_s^.robot.body.pos.y);
+    ev_s.distance := Q_sqrrt(ev_s.sides.x + ev_s.sides.y); 
     ev_s.angle := Q_atan(ev_s.sides.y / ev_s.sides.x);
 
-    locdriver_start_event := ev_s;
+    locdriver_process := ev_s;
 end;
 
 // Configure a entidade
